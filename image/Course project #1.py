@@ -1,11 +1,9 @@
 import PIL.Image
 import PIL.ImageTk
-from tkinter import *
-import math
 import cv2
 import numpy as np
 from tkinter.filedialog import *
-from matplotlib import pyplot as plt
+
 
 def open_first_file(event):
     global flag_1, circuit_1, maximX_1, maximY_1, pixels_1
@@ -37,6 +35,7 @@ def open_first_file(event):
         label_1['text'] = "-file doesn't choose-"
         flag_1 = 0
     check_btn_compare()
+
 
 def open_second_file(event):
     global flag_2, circuit_2, maximX_2, maximY_2, pixels_2
@@ -79,38 +78,48 @@ def check_btn_compare():
 
 
 def compare(event):
-    global pixels_1, pixels_2, maximY_1, maximY_2, label_1, label_2, label_3, circuit_1, circuit_2
+    global pixels_1, pixels_2, maximX_1, maximY_1, maximX_2, maximY_2, label_1, label_2, label_3, circuit_1, circuit_2
     if btn_3['state'].find("active") != -1:
-        max_X, max_Y = compare_size(maximX_1, maximX_2, maximY_1, maximY_2)
-        result = np.zeros((max_Y, max_X, 3), np.uint8)
-        result[::] = (255, 255, 255)
+        max_x = max(maximX_1, maximX_2)
+        max_y = max(maximY_1, maximY_2)
+        result = create_np_white_image(max(maximY_1, maximY_2), max(maximX_1, maximX_2), 3)
+        a, b = calculate(pixels_1, maximX_1, maximY_1, pixels_2, maximX_2, maximY_2)
 
-        a_1, b_1 = calculate(pixels_1, max_X, max_Y)
-        a_2, b_2 = calculate(pixels_2, max_X, max_Y)
-
-        cv2.imwrite('result_a1.jpg', a_1)
-        cv2.imwrite('result_b1.jpg', b_1)
-        cv2.imwrite('result_a2.jpg', a_2)
-        cv2.imwrite('result_b2.jpg', b_2)
-        cv2.drawContours(result, circuit_1, -1, (0, 255, 0), 10)
-        cv2.drawContours(result, circuit_2, -1, (255, 0, 0), 10)
-        cv2.imwrite("result_1.jpg", result)
+        cv2.imwrite('result_X.jpg', a)
+        cv2.imwrite('result_Y.jpg', b)
+        cv2.drawContours(result, circuit_1, -1, (0, 255, 0), 5)
+        cv2.drawContours(result, circuit_2, -1, (255, 0, 0), 5)
+        cv2.imwrite("result_circuit.jpg", result)
         clear_win()
 
-        image = PIL.Image.open("result_1.jpg")
-        image = image.resize((int(max_X/4), int(max_Y/4)), PIL.Image.ANTIALIAS)
-        render = PIL.ImageTk.PhotoImage(image)
+        image_result = PIL.Image.open("result_circuit.jpg")
+        image_result = image_result.resize((int(max_x/4), int(max_y/4)), PIL.Image.ANTIALIAS)
+        render_result = PIL.ImageTk.PhotoImage(image_result)
+
+        image_result_x = PIL.Image.open("result_x.jpg")
+        image_result_x = image_result_x.resize((int(max_x/4), int(max_y/4)), PIL.Image.ANTIALIAS)
+        render_result_x = PIL.ImageTk.PhotoImage(image_result_x)
+
+        image_result_y = PIL.Image.open("result_Y.jpg")
+        image_result_y = image_result_y.resize((int(max_x/4), int(max_y/4)), PIL.Image.ANTIALIAS)
+        render_result_y = PIL.ImageTk.PhotoImage(image_result_y)
+
         root.geometry("1020x620")
-        label_2 = Label(root, image=render)
-        label_2.image = render
-        label_2.grid(row=1, column=1)
 
+        label_1 = Label(root, image=render_result)
+        label_1.image = render_result
+        label_1.grid(row=1, column=0)
 
+        label_2 = Label(root, image=render_result_x)
+        label_2.image = render_result_x
+        label_2.grid(row=0, column=0)
 
+        label_3 = Label(root, image=render_result_y)
+        label_3.image = render_result_y
+        label_3.grid(row=1, column=1)
 
 
 def handler(img):
-
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     gray_blur = cv2.GaussianBlur(gray, (9, 9), 1)
     edged = cv2.Canny(gray_blur, 15, 30)
@@ -126,35 +135,34 @@ def handler(img):
             circuit_max = len(circuit[i])
             circuit_max_id = i
     # поиск минимальной координаты dx и dy для перемещения контура
-    minimX = circuit[circuit_max_id][0][0][0]
-    minimY = circuit[circuit_max_id][0][0][1]
+    minim_x = circuit[circuit_max_id][0][0][0]
+    minim_y = circuit[circuit_max_id][0][0][1]
     for i in range(len(circuit[circuit_max_id])):
-        if minimX > circuit[circuit_max_id][i][0][0]:
-            minimX = circuit[circuit_max_id][i][0][0]
-        if minimY > circuit[circuit_max_id][i][0][1]:
-            minimY = circuit[circuit_max_id][i][0][1]
+        if minim_x > circuit[circuit_max_id][i][0][0]:
+            minim_x = circuit[circuit_max_id][i][0][0]
+        if minim_y > circuit[circuit_max_id][i][0][1]:
+            minim_y = circuit[circuit_max_id][i][0][1]
     # перемещение контура к x=0 и y=0
     for i in range(len(circuit[circuit_max_id])):
-        circuit[circuit_max_id][i][0][0] -= minimX
-        circuit[circuit_max_id][i][0][1] -= minimY
-    maximX = circuit[circuit_max_id][0][0][0]
-    maximY = circuit[circuit_max_id][0][0][1]
+        circuit[circuit_max_id][i][0][0] -= minim_x
+        circuit[circuit_max_id][i][0][1] -= minim_y
+    maxim_x = circuit[circuit_max_id][0][0][0]
+    maxim_y = circuit[circuit_max_id][0][0][1]
     # поиск максимума X и Y для определения размера окна
     for i in range(len(circuit[circuit_max_id])):
-        if maximX < circuit[circuit_max_id][i][0][0]:
-            maximX = circuit[circuit_max_id][i][0][0]
-        if maximY < circuit[circuit_max_id][i][0][1]:
-            maximY = circuit[circuit_max_id][i][0][1]
+        if maxim_x < circuit[circuit_max_id][i][0][0]:
+            maxim_x = circuit[circuit_max_id][i][0][0]
+        if maxim_y < circuit[circuit_max_id][i][0][1]:
+            maxim_y = circuit[circuit_max_id][i][0][1]
 
     mask = np.zeros(gray.shape, np.uint8)
     cv2.drawContours(mask, circuit, circuit_max_id, 255, -1)
-    pixelpoints = cv2.findNonZero(mask)
+    pixel_points = cv2.findNonZero(mask)
 
-    return circuit[circuit_max_id], maximX, maximY, pixelpoints
+    return circuit[circuit_max_id], maxim_x, maxim_y, pixel_points
 
 
 def clear_win():
-    #root.forget()
     btn_1.grid_forget()
     btn_2.grid_forget()
     btn_3.grid_forget()
@@ -163,43 +171,79 @@ def clear_win():
     label_3.grid_forget()
 
 
-def compare_size(max_X1, max_X2, max_Y1, max_Y2):
-    max_X = max(max_X1, max_X2)
-    max_Y = max(max_Y1, max_Y2)
+def maximum_number_in_array(array):
+    maxim = array[0]
+    for i in range(len(array)-1):
+        if maxim < array[i]:
+            maxim = array[i]
+    return maxim
 
-    return max_X, max_Y
+
+def create_array_skeleton(array, length):
+    for i in range(length + 1):
+        array.append(0)
+    return array
 
 
-def calculate(pixels, maxX, maxY):
-    x = []
-    y = []
-    for i in range(maxX+1):
-        x.append(0)
-    for j in range(maxY+1):
-        y.append(0)
+def create_histogram_for_graphics(array_x, array_y, pixels):
     for k in range(len(pixels)-1):
-        x[pixels[k][0][0]] += 1
-        y[pixels[k][0][1]] += 1
-    m = x[0]
-    n = y[0]
-    for i in range(len(x)-1):
-        if m < x[i]:
-            m = x[i]
-    for j in range(len(y)-1):
-        if n < y[j]:
-            n = y[j]
-    a = np.zeros((m+2, len(x)+2, 3), dtype=np.uint8)
+        array_x[pixels[k][0][0]] += 1
+        array_y[pixels[k][0][1]] += 1
+    return array_x, array_y
+
+
+def maximum_number_in_two_arrays(array_1, array_2):
+    maximum_in_first_array = maximum_number_in_array(array_1)
+    maximum_in_second_array = maximum_number_in_array(array_2)
+    return max(maximum_in_first_array, maximum_in_second_array)
+
+
+def create_np_white_image(width, height, number_of_channels):
+    a = np.zeros((width + 2, height + 2, number_of_channels), dtype=np.uint8)
     a[::] = (255, 255, 255)
-    for i in range(len(x)):
-        a[m-x[i], i, 0] = 0
-        a[m-x[i], i, 1] = 0
-        a[m-x[i], i, 2] = 0
-    b = np.zeros((len(y)+2, n+2,  3), dtype=np.uint8)
-    b[::] = (255, 255, 255)
-    for j in range(len(y)-1):
-        b[j, y[j], 0] = 0
-        b[j, y[j], 1] = 0
-        b[j, y[j], 2] = 0
+    return a
+
+
+def calculate(pixels_array_1, max_x_1, max_y_1, pixels_array_2, max_x_2, max_y_2):
+    x_1, y_1, x_2, y_2 = [], [], [], []
+
+    # создание каркаса нулевого массива для изображения
+    x_1 = create_array_skeleton(x_1, max_x_1)
+    y_1 = create_array_skeleton(y_1, max_y_1)
+    x_2 = create_array_skeleton(x_2, max_x_2)
+    y_2 = create_array_skeleton(y_2, max_y_2)
+
+    # создание гистограммы
+    x_1, y_1 = create_histogram_for_graphics(x_1, y_1, pixels_array_1)
+    x_2, y_2 = create_histogram_for_graphics(x_2, y_2, pixels_array_2)
+
+    # поиск максимумов
+    m_1 = maximum_number_in_array(x_1)
+    m_2 = maximum_number_in_array(x_2)
+    m = maximum_number_in_two_arrays(x_1, x_2)
+    n = maximum_number_in_two_arrays(y_1, y_2)
+
+    # создание белой картинки
+    a = create_np_white_image(m, max(len(x_1), len(x_2)), 3)
+    b = create_np_white_image(max(len(y_1), len(y_2)), n, 3)
+
+    # запись гистограмы в картунку
+    for i in range(len(x_1)):
+        a[m_1-x_1[i], i, 0] = 0
+        a[m_1-x_1[i], i, 1] = 255
+        a[m_1-x_1[i], i, 2] = 0
+    for i in range(len(x_2)):
+        a[m_2-x_2[i], i, 0] = 255
+        a[m_2-x_2[i], i, 1] = 0
+        a[m_2-x_2[i], i, 2] = 0
+    for j in range(len(y_1)-1):
+        b[j, y_1[j], 0] = 0
+        b[j, y_1[j], 1] = 255
+        b[j, y_1[j], 2] = 0
+    for j in range(len(y_1)-1):
+        b[j, y_2[j], 0] = 255
+        b[j, y_2[j], 1] = 0
+        b[j, y_2[j], 2] = 0
     return a, b
 
 

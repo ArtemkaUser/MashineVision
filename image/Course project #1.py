@@ -78,12 +78,18 @@ def check_btn_compare():
 
 
 def compare(event):
-    global dev_x, dev_y, max_dev_x, max_dev_y, pixels_1, pixels_2, maximX_1, maximY_1, maximX_2, maximY_2, label_1, label_2, label_3, circuit_1, circuit_2
+    global dev_x, dev_y, max_dev_x, max_dev_y, pixels_1, pixels_2, maximX_1, maximY_1, maximX_2, maximY_2, label_1, label_2, label_3, circuit_1, circuit_2, average_x, average_y, a_y, b_y, c
     if btn_3['state'].find("active") != -1:
         max_x = max(maximX_1, maximX_2)
         max_y = max(maximY_1, maximY_2)
         result = create_np_white_image(max(maximY_1, maximY_2), max(maximX_1, maximX_2), 3)
-        a_1, b_1, a_2, b_2, dev_x, dev_y, max_dev_x, max_dev_y = calculate(pixels_1, maximX_1, maximY_1, pixels_2, maximX_2, maximY_2)
+        a_1, b_1, a_2, b_2, dev_x, dev_y, max_dev_x, max_dev_y, average_x, average_y, a_y, b_y = calculate(pixels_1, maximX_1, maximY_1, pixels_2, maximX_2, maximY_2)
+
+        c = []
+        for i in range(len(a_y)):
+            c.append(abs(a_y[i]-b_y[i]))
+        print(c)
+
 
         pixel_points_X1 = cv2.findNonZero(cv2.cvtColor(a_1, cv2.COLOR_BGR2GRAY))
         pixel_points_X2 = cv2.findNonZero(cv2.cvtColor(a_2, cv2.COLOR_BGR2GRAY))
@@ -118,64 +124,50 @@ def compare(event):
         label_1.image = render_result
         label_1.grid(row=1, column=0)
 
-        label_2 = Label(root, image=render_result_x)
-        label_2.image = render_result_x
-        label_2.grid(row=0, column=0)
-
         label_3 = Label(root, image=render_result_y)
         label_3.image = render_result_y
         label_3.grid(row=1, column=1)
 
-        label_4 = Label(root, text="standard deviation X(px):", font=('Ubuntu', 15))
-        label_4.grid(row=2, column=0)
+        label_4 = Label(root, text="Средн. отклонение(px):", font=('Ubuntu', 15), bg='white')
+        label_4.grid(row=2, column=0, sticky="e")
 
-        label_5 = Label(root, text=dev_x, font=('Ubuntu', 15))
-        label_5.grid(row=2, column=1)
+        label_5 = Label(root, text=average_y, font=('Ubuntu', 15), bg='white')
+        label_5.grid(row=2, column=1, sticky="w")
 
-        label_6 = Label(root, text="standard deviation Y(px):", font=('Ubuntu', 15))
-        label_6.grid(row=3, column=0)
+        label_6 = Label(root, text="Средн. кв. отклонение(px):", font=('Ubuntu', 15), bg='white')
+        label_6.grid(row=3, column=0, sticky="e")
 
-        label_7 = Label(root, text=dev_y, font=('Ubuntu', 15))
-        label_7.grid(row=3, column=1)
+        label_7 = Label(root, text=dev_y, font=('Ubuntu', 15), bg='white')
+        label_7.grid(row=3, column=1, sticky="w")
 
-        label_8 = Label(root, text="max deviation X(px):", font=('Ubuntu', 15))
-        label_8.grid(row=4, column=0)
+        label_8 = Label(root, text="Макс. отклонение(px):", font=('Ubuntu', 15), bg='white')
+        label_8.grid(row=4, column=0, sticky="e")
 
-        label_9 = Label(root, text=max_dev_x, font=('Ubuntu', 15))
-        label_9.grid(row=4, column=1)
-
-        label_10 = Label(root, text="max deviation Y(px):", font=('Ubuntu', 15))
-        label_10.grid(row=5, column=0)
-
-        label_11 = Label(root, text=max_dev_y, font=('Ubuntu', 15))
-        label_11.grid(row=5, column=1)
+        label_9 = Label(root, text=max_dev_y, font=('Ubuntu', 15), bg='white')
+        label_9.grid(row=4, column=1, sticky="w")
         ###
-        label_12.grid(row=2, column=2)
+        label_12.grid(row=2, column=2, sticky="e")
 
-        label_13.grid(row=2, column=3)
+        label_13.grid(row=2, column=3, sticky="w")
 
-        label_14.grid(row=3, column=2)
+        label_14.grid(row=3, column=2, sticky="e")
 
-        label_15.grid(row=3, column=3)
+        label_15.grid(row=3, column=3, sticky="w")
 
-        label_16.grid(row=4, column=2)
+        label_16.grid(row=4, column=2, sticky="e")
 
-        label_17.grid(row=4, column=3)
-
-        label_18.grid(row=5, column=2)
-
-        label_19.grid(row=5, column=3)
+        label_17.grid(row=4, column=3, sticky="w")
 
         btn_1 = Button(root, text="Calculate into mm", font=('Ubuntu', 15), bg='green')
-        btn_1.grid(row=6, column=0, sticky="w")
+        btn_1.grid(row=6, column=0, sticky="e")
         btn_1.bind('<Button-1>', output)
 
-        btn_2 = Button(root, text="Check deviation x", font=('Ubuntu', 15), bg='green')
-        btn_2.grid(row=6, column=2, sticky="w")
-        btn_2.bind('<Button-1>', check)
+        #btn_2 = Button(root, text="Check deviation x", font=('Ubuntu', 15), bg='green')
+        #btn_2.grid(row=6, column=2, sticky="w")
+        #btn_2.bind('<Button-1>', check)
 
         entry_1.grid(row=6, column=1, sticky="w")
-        entry_2.grid(row=6, column=3, sticky="w")
+        #entry_2.grid(row=6, column=3, sticky="w")
 
 
 def check(event):
@@ -189,23 +181,44 @@ def check(event):
     else:
         label_21.grid(row=1, column=3)
 
+
 def output(event):
     global dev_x, dev_y, max_dev_x, max_dev_y, compare_size
     txt = entry_1.get()
     scale = max(maximX_1, maximX_2)/float(txt)
-    a = dev_x/scale
+    a = average_y/scale
     b = dev_y/scale
     c = max_dev_x/scale
-    d = max_dev_y/scale
-    compare_size = d
-    label_13 = Label(root, text=a, font=('Ubuntu', 15))
+    label_13 = Label(root, text=a, font=('Ubuntu', 15), bg='white')
     label_13.grid(row=2, column=3)
-    label_15 = Label(root, text=b, font=('Ubuntu', 15))
+    label_15 = Label(root, text=b, font=('Ubuntu', 15), bg='white')
     label_15.grid(row=3, column=3)
-    label_17 = Label(root, text=c, font=('Ubuntu', 15))
+    label_17 = Label(root, text=c, font=('Ubuntu', 15), bg='white')
     label_17.grid(row=4, column=3)
-    label_19 = Label(root, text=d, font=('Ubuntu', 15))
-    label_19.grid(row=5, column=3)
+    table(scale)
+
+
+def table(scale):
+    global a_y, b_y, c
+    label_21 = Label(root, text="Контур№1", font=('Ubuntu', 12), bg='white')
+    label_21.grid(row=2, column=5)
+    label_21 = Label(root, text="Контур№2", font=('Ubuntu', 12), bg='white')
+    label_21.grid(row=2, column=6)
+    label_21 = Label(root, text="Отклонение(px)", font=('Ubuntu', 12), bg='white')
+    label_21.grid(row=2, column=7)
+    label_21 = Label(root, text="Отклонение(мм)", font=('Ubuntu', 12), bg='white')
+    label_21.grid(row=2, column=8)
+    for i in range(len(a_y)):
+        label_21 = Label(root, text=i+1, font=('Ubuntu', 12), bg='white')
+        label_21.grid(row=3+i, column=4)
+        label_21 = Label(root, text=a_y[i], font=('Ubuntu', 12), bg='white')
+        label_21.grid(row=3+i, column=5)
+        label_21 = Label(root, text=b_y[i], font=('Ubuntu', 12), bg='white')
+        label_21.grid(row=3+i, column=6)
+        label_21 = Label(root, text=c[i], font=('Ubuntu', 12), bg='white')
+        label_21.grid(row=3+i, column=7)
+        label_21 = Label(root, text=c[i]/scale, font=('Ubuntu', 12), bg='white')
+        label_21.grid(row=3 + i, column=8)
 
 
 def handler(img):
@@ -297,21 +310,48 @@ def deviation(array_1, array_2):
     temp = 0
     average = 0
     deviation = []
-    for i in range(len(array_1) - 1):
+    for i in range(len(array_1)):
         deviation.append(array_1[i] - array_2[i])
         average += deviation[i]
     average = average/len(deviation)
-    for i in range(len(array_1) - 1):
+    for i in range(len(array_1)):
         temp += pow(deviation[i]-average, 2)
     average_deviation = sqrt(temp / len(deviation))
-    return average_deviation
+    return average_deviation, average
+
+
+def array(array_1, array_2, max_id):
+    a, b = [], []
+    if max_id - 12 < 0:
+        for i in range(24):
+            a.append(array_1[i])
+            b.append(array_2[i])
+    elif max_id + 12 > len(array_1)-1:
+        for i in range(len(array_1)-24, len(array_1)):
+            a.append(array_1[i])
+            b.append(array_2[i])
+    else:
+        begin_id = max_id - 12
+        end_id = max_id + 12
+        for i in range(begin_id, end_id):
+            a.append(array_1[i])
+            b.append(array_2[i])
+    return a, b
 
 
 def max_deviation(array_1, array_2):
     deviation = []
-    for i in range (len(array_1)-1):
+    max_id = 0
+    for i in range(len(array_1)-1):
         deviation.append(abs(array_1[i]-array_2[i]))
-    return max(deviation)
+    maximum = deviation[0]
+    for i in range(len(deviation)):
+        if maximum < deviation[i]:
+            maximum = deviation[i]
+            max_id = i
+    a, b = array(array_1, array_2, max_id)
+
+    return max(deviation), a, b
 
 
 def calculate(pixels_array_1, max_x_1, max_y_1, pixels_array_2, max_x_2, max_y_2):
@@ -328,10 +368,10 @@ def calculate(pixels_array_1, max_x_1, max_y_1, pixels_array_2, max_x_2, max_y_2
     x_2, y_2 = create_histogram_for_graphics(x_2, y_2, pixels_array_2)
 
     # расчет отклонений
-    deviation_x = deviation(x_1, x_2)
-    deviation_y = deviation(y_1, y_2)
-    max_deviation_x = max_deviation(x_1, x_2)
-    max_deviation_y = max_deviation(y_1, y_2)
+    deviation_x, average_x = deviation(x_1, x_2)
+    deviation_y, average_y = deviation(y_1, y_2)
+    max_deviation_x, a_x, b_x = max_deviation(x_1, x_2)
+    max_deviation_y, a_y, b_y = max_deviation(y_1, y_2)
 
     # поиск максимумов
     m_1 = maximum_number_in_array(x_1)
@@ -364,7 +404,7 @@ def calculate(pixels_array_1, max_x_1, max_y_1, pixels_array_2, max_x_2, max_y_2
         b_2[j, y_2[j], 0] = 255
         b_2[j, y_2[j], 1] = 255
         b_2[j, y_2[j], 2] = 255
-    return a_1, b_1, a_2, b_2, deviation_x, deviation_y, max_deviation_x, max_deviation_y
+    return a_1, b_1, a_2, b_2, deviation_x, deviation_y, max_deviation_x, max_deviation_y, average_x, average_y, a_y, b_y
 
 dev_x, dev_y, max_dev_x, max_dev_y = 0, 0, 0, 0
 flag_1 = 0
@@ -373,41 +413,43 @@ circuit_1, circuit_2 = 0, 0
 maximX_1, maximX_2, maximY_1, maximY_2 = 0, 0, 0, 0
 pixels_1, pixels_2 = 0, 0
 compare_size = 0
+average_x, average_y = 0, 0
+a_y, b_y, с = [], [], []
 root = Tk()
 root.title("Compare details")
+root.configure(bg="white")
 
-btn_1 = Button(root, text="First file", width=10, font=('Ubuntu', 15))
+btn_1 = Button(root, text="First file", width=10, font=('Ubuntu', 15), bg='white')
 btn_1.grid(row=0, column=0, sticky="w")
 btn_1.bind('<Button-1>', open_first_file)
 
-label_1 = Label(root, width=20, text="-file doesn't choose-", font=('Ubuntu', 15))
+label_1 = Label(root, width=20, text="-file doesn't choose-", font=('Ubuntu', 15), bg='white')
 label_1.grid(row=0, column=1)
 
-btn_2 = Button(root, text="Second file", width=10, font=('Ubuntu', 15))
+btn_2 = Button(root, text="Second file", width=10, font=('Ubuntu', 15), bg='white')
 btn_2.grid(row=1, column=0, sticky="w")
 btn_2.bind('<Button-1>', open_second_file)
 
-label_2 = Label(root, width=20, text="-file doesn't choose-", font=('Ubuntu', 15))
+label_2 = Label(root, width=20, text="-file doesn't choose-", font=('Ubuntu', 15), bg='white')
 label_2.grid(row=1, column=1)
 
-btn_3 = Button(root, text="Compare", width=10, font=('Ubuntu', 15))
+btn_3 = Button(root, text="Compare", width=10, font=('Ubuntu', 15), bg='white')
 btn_3.grid(row=2, column=0, sticky="w")
 btn_3.bind('<Button-1>', compare)
 
-label_3 = Label(root, width=20, font=('Ubuntu', 15))
+label_3 = Label(root, width=20, font=('Ubuntu', 15), bg='white')
 label_3.grid(row=2, column=1)
 
 entry_1 = Entry(root, font=15)
 entry_2 = Entry(root, font=15)
 
-label_12 = Label(root, text="standard deviation X(mm):", font=('Ubuntu', 15))
-label_13 = Label(root, text="           -//-          ", font=('Ubuntu', 15))
-label_14 = Label(root, text="standard deviation Y(mm):", font=('Ubuntu', 15))
-label_15 = Label(root, text="           -//-          ", font=('Ubuntu', 15))
-label_16 = Label(root, text="max deviation X(mm):", font=('Ubuntu', 15))
-label_17 = Label(root, text="           -//-          ", font=('Ubuntu', 15))
-label_18 = Label(root, text="max deviation Y(mm):", font=('Ubuntu', 15))
-label_19 = Label(root, text="           -//-          ", font=('Ubuntu', 15))
+label_12 = Label(root, text="Средн. отклонение(мм):", font=('Ubuntu', 15), bg='white')
+label_13 = Label(root, text="           -//-          ", font=('Ubuntu', 15), bg='white')
+label_14 = Label(root, text="Средн. кв. отклонение(мм):", font=('Ubuntu', 15), bg='white')
+label_15 = Label(root, text="           -//-          ", font=('Ubuntu', 15), bg='white')
+label_16 = Label(root, text="Макс. отклонение(мм):", font=('Ubuntu', 15), bg='white')
+label_17 = Label(root, text="           -//-          ", font=('Ubuntu', 15), bg='white')
+
 label_20 = Label(root, text="GOOD!", font=('Ubuntu', 20), bg='green')
 label_21 = Label(root, text="NOPE!", font=('Ubuntu', 20), bg='red')
 

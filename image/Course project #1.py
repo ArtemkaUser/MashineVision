@@ -225,10 +225,12 @@ def handler(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     gray_blur = cv2.GaussianBlur(gray, (9, 9), 1)
     edged = cv2.Canny(gray_blur, 15, 30)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 25))
     closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
     circuit = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[1]
-
+    cv2.imwrite('gray.jpg', gray)
+    cv2.imwrite('edged.jpg', edged)
+    cv2.imwrite('closed.jpg', closed)
     # поиск самого большого контура
     circuit_max = len(circuit[0])
     circuit_max_id = 0

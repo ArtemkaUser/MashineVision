@@ -1,22 +1,24 @@
 import argparse
+import sys
+
 
 def echo():
     """
     This function will print each line of text,
     which will be entered in the terminal.
     """
-    while True:
-        temp = input()
-        if temp == "q":
+    for line in sys.stdin:
+        if sys.stdin == "EOF":
             break
         else:
-            print(temp)
+            sys.stdout.write(line)
 
 
 def file_open(a):
     """
     This function will read and print file into the terminal.
     """
+    print("fuck")
 
 
 def main():

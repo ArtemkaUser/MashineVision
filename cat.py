@@ -4,8 +4,7 @@ import sys
 
 def echo():
     """
-    This function will print each line of text,
-    which will be entered in the terminal.
+    This function will print input stream.
     """
     for line in sys.stdin:
         if sys.stdin == "EOF":

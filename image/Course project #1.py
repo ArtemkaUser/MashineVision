@@ -83,13 +83,14 @@ def compare(event):
         max_x = max(maximX_1, maximX_2)
         max_y = max(maximY_1, maximY_2)
         result = create_np_white_image(max(maximY_1, maximY_2), max(maximX_1, maximX_2), 3)
+        result_temp_1 = create_np_white_image(max(maximY_1, maximY_2), max(maximX_1, maximX_2), 3)
+        result_temp_2 = create_np_white_image(max(maximY_1, maximY_2), max(maximX_1, maximX_2), 3)
+
         a_1, b_1, a_2, b_2, dev_x, dev_y, max_dev_x, max_dev_y, average_x, average_y, a_y, b_y = calculate(pixels_1, maximX_1, maximY_1, pixels_2, maximX_2, maximY_2)
 
         c = []
         for i in range(len(a_y)):
             c.append(abs(a_y[i]-b_y[i]))
-        print(c)
-
 
         pixel_points_X1 = cv2.findNonZero(cv2.cvtColor(a_1, cv2.COLOR_BGR2GRAY))
         pixel_points_X2 = cv2.findNonZero(cv2.cvtColor(a_2, cv2.COLOR_BGR2GRAY))
@@ -105,6 +106,11 @@ def compare(event):
 
         cv2.drawContours(result, circuit_1, -1, (0, 255, 0), 5)
         cv2.drawContours(result, circuit_2, -1, (255, 0, 0), 5)
+
+        cv2.fillPoly(result_temp_1, pts=[circuit_1], color=(255, 255, 255))
+        cv2.fillPoly(result_temp_2, pts=[circuit_2], color=(255, 255, 255))
+        cv2.imwrite('Temp1.jpg', result_temp_1)
+        cv2.imwrite('Temp2.jpg', result_temp_2)
         cv2.imwrite("result_circuit.jpg", result)
         clear_win()
 
@@ -184,10 +190,11 @@ def check(event):
 
 def output(event):
     global dev_x, dev_y, max_dev_x, max_dev_y, compare_size
+
     txt = entry_1.get()
     scale = max(maximX_1, maximX_2)/float(txt)
     a = average_y/scale
-    b = dev_y/scale
+    b = dev_x/scale
     c = max_dev_x/scale
     label_13 = Label(root, text=a, font=('Ubuntu', 15), bg='white')
     label_13.grid(row=2, column=3)
@@ -195,9 +202,9 @@ def output(event):
     label_15.grid(row=3, column=3)
     label_17 = Label(root, text=c, font=('Ubuntu', 15), bg='white')
     label_17.grid(row=4, column=3)
-    table(scale)
+    #table(scale)
 
-
+'''
 def table(scale):
     global a_y, b_y, c
     label_21 = Label(root, text="Контур№1", font=('Ubuntu', 12), bg='white')
@@ -220,17 +227,18 @@ def table(scale):
         label_21 = Label(root, text=c[i]/scale, font=('Ubuntu', 12), bg='white')
         label_21.grid(row=3 + i, column=8)
 
-
+'''
 def handler(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
     gray_blur = cv2.GaussianBlur(gray, (9, 9), 1)
     edged = cv2.Canny(gray_blur, 15, 30)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 25))
     closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
     circuit = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[1]
-    cv2.imwrite('gray.jpg', gray)
-    cv2.imwrite('edged.jpg', edged)
-    cv2.imwrite('closed.jpg', closed)
+
+
+
     # поиск самого большого контура
     circuit_max = len(circuit[0])
     circuit_max_id = 0
@@ -262,6 +270,7 @@ def handler(img):
     mask = np.zeros(gray.shape, np.uint8)
     cv2.drawContours(mask, circuit, circuit_max_id, 255, -1)
     pixel_points = cv2.findNonZero(mask)
+
 
     return circuit[circuit_max_id], maxim_x, maxim_y, pixel_points
 
@@ -407,6 +416,7 @@ def calculate(pixels_array_1, max_x_1, max_y_1, pixels_array_2, max_x_2, max_y_2
         b_2[j, y_2[j], 1] = 255
         b_2[j, y_2[j], 2] = 255
     return a_1, b_1, a_2, b_2, deviation_x, deviation_y, max_deviation_x, max_deviation_y, average_x, average_y, a_y, b_y
+
 
 dev_x, dev_y, max_dev_x, max_dev_y = 0, 0, 0, 0
 flag_1 = 0

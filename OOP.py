@@ -38,15 +38,14 @@ class Container:
         self.master = master
         self.row_button = row
         self.column_button = column
-        self.row_label = row
         self.column_label = column + 1
         self.text_button = text_button
         self.text_label = "-file doesn't choose-"
-        self.bind_key = "<Button-1>"
-        self.bg = 'white'
-        self.font = ('Ubuntu', 15)
-        self.fg_err = 'red'
-        self.state = False
+        self.bind_key = "<Button-1>"  # Button-1 is left click of mouse
+        self.bg = 'white'  # back ground colour
+        self.font = ('Ubuntu', 15)  # font properties
+        self.fg_err = 'red'  # colour of error text
+        self.state = False  # state of func
         self.button()
         self.label(self.text_label)
 
@@ -59,7 +58,7 @@ class Container:
     def label(self, text, fg='black'):
         """Place label in the window"""
         label = Label(self.master, width=20, text=text, font=self.font, bg=self.bg, fg=fg)
-        label.grid(row=self.row_label, column=self.column_label)
+        label.grid(row=self.row_button, column=self.column_label)
 
     def open_file_event(self, event):
         """Open window for get path on the file, filter .jpg and .JPG files, filter all errors"""

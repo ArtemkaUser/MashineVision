@@ -23,7 +23,6 @@ class Window:
             first_circuit, second_circuit = [c.path for c in self.containers]
             self.circuits = [Handler(first_circuit), Handler(second_circuit)]
             a, b = [c.circuit for c in self.circuits]
-            print(a, b)
 
 
 class Handler:
@@ -35,13 +34,16 @@ class Handler:
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 25))
         closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
         circuit = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[1]
-        circuit_max = len(circuit[0])
-        circuit_max_id = 0
+        # circuit is array in arrays in arrays,
+        # I cannot use max_id = max(list(map(len, circuit))) or max_id = circuit.index(max(circuit)
+        max_len_array = 0
+        max_id = 0
         for i in range(len(circuit)):
-            if circuit_max < len(circuit[i]):
-                circuit_max = len(circuit[i])
-                circuit_max_id = i
-        self.circuit = circuit[circuit_max_id]
+            if max_len_array < len(circuit[i]):
+                max_len_array = len(circuit[i])
+                max_id = i
+        self.circuit = circuit[max_id]
+
 
 class Container:
     def __init__(self, master, row, column, text_button):

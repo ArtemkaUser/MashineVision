@@ -3,7 +3,7 @@ import PIL.ImageTk
 import cv2
 from tkinter.filedialog import *
 import ParamOfCircuit as Pofc
-import AverDeviat as ad
+import AvgDev as ad
 
 
 class Window:

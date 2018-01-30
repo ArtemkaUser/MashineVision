@@ -1,9 +1,10 @@
 import PIL.Image
 import PIL.ImageTk
-import cv2
 from tkinter.filedialog import *
 import ParamOfCircuit as Pofc
-import AvgDev as ad
+import AverDeviat as Ad
+import Draw2Circuits as D2c
+import Handler
 
 
 class Window:
@@ -18,18 +19,36 @@ class Window:
         self.containers = [ContBtnLbl(master, 0, 0, "First file"), ContBtnLbl(master, 1, 0, "Second file")]
         self.button = Button(master, text='Compare', width=10, font=self.FONT, bg=self.BG)
         self.button.grid(row=2, column=0, sticky="w")
-        self.button.bind(self.BIND_KEY, self.check)  # bind button by func
+        self.button.bind(self.BIND_KEY, self.calculate)  # bind button by func
         self.circuits = []
         self.param_circuit = []
-
-    def check(self, event):
+        self.nums_px = 0
+        self.nums_mm = 0
+        self.d_circuit = 0
+    def calculate(self, event):
         if all([c.state for c in self.containers]):
             path_to_first_circuit, path_to_second_circuit = [c.path for c in self.containers]
-            self.circuits = [Handler(path_to_first_circuit), Handler(path_to_second_circuit)]
+            self.circuits = [Handler.Handler(path_to_first_circuit), Handler.Handler(path_to_second_circuit)]
             first_circuit, second_circuit = [c.circuit for c in self.circuits]
             self.param_circuit = [Pofc.ParamCircuit(first_circuit), Pofc.ParamCircuit(second_circuit)]
-            self.clear_win()
-            self.result_win()
+            self.draw()
+
+    def draw(self):
+        a, b = [c.fill_circuit for c in self.param_circuit]
+        first_file_name = "first image.jpg"
+        second_file_name = "second image.jpg"
+        D2c.Draw2Circuits(a, b, first_file_name)
+        a, b = [c.histogram for c in self.param_circuit]
+        D2c.Draw2Circuits(a, b, second_file_name)
+        self.calc_param()
+        self.clear_win()
+        self.result_win(first_file_name, second_file_name)
+
+    def calc_param(self):
+        a, b = [c.lens_of_circuit for c in self.param_circuit]
+        self.nums_px = Ad.AverDev(a, b)
+        c, d = [c.width_of_image for c in self.param_circuit]
+        self.nums_mm = Ad.AverDev(a, b, max(c, d), 24.4)
 
     def clear_win(self):
         self.button.destroy()
@@ -37,30 +56,8 @@ class Window:
             c.button.destroy()
             c.label.destroy()
 
-    def result_win(self):
+    def result_win(self, first_file, second_file):
         pass
-
-
-class Handler:
-    def __init__(self, path):
-        img = cv2.imread(path)
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        gray_blur = cv2.GaussianBlur(gray, (9, 9), 1)
-        edged = cv2.Canny(gray_blur, 15, 30)
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 25))
-        closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
-        circuit = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[1]
-        # circuit is array in arrays in list,
-        # I cannot use max_id = circuit.index(max(circuit)
-        # max_id = circuit.index(max(circuit))
-
-        max_len_array = 0
-        max_id = 0
-        for i in range(len(circuit)):
-            if max_len_array < len(circuit[i]):
-                max_len_array = len(circuit[i])
-                max_id = i
-        self.circuit = circuit[max_id]
 
 
 class ContBtnLbl:

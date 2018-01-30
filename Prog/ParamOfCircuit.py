@@ -59,18 +59,18 @@ class ParamCircuit:
 
     def create_array_skeleton(self, length):
         array = []
-        for i in range(length + 1):
+        for i in range(length+1):
             array.append(0)
         return array
 
     def calculate_histogram(self):
         self.histogram = self.create_np_white_image(self.width_of_image, self.height_of_image)
         self.lens_of_circuit = np.array(self.lens_of_circuit)
-        for row in range(len(self.lens_of_circuit) - 1):
+        for row in range(len(self.lens_of_circuit)):
             for channel in range(3):
                 self.histogram[row, self.lens_of_circuit[row], channel] = 255
 
     def create_np_white_image(self, width, height):
-        array = np.zeros((width, height, 3), dtype=np.uint8)
+        array = np.zeros((width+1, height+1, 3), dtype=np.uint8)
         array[::] = (0, 0, 0)
         return array

@@ -1,30 +1,31 @@
-import PIL.Image
-import PIL.ImageTk
 from tkinter.filedialog import *
 import ParamOfCircuit as Pofc
 import AverDeviat as Ad
 import Draw2Circuits as D2c
 import Handler
+import OutputImage as Oi
+import ContainLabel as CLabel
+import ContBtnLbl as Cbl
 
 
 class Window:
     BIND_KEY = "<Button-1>"  # Button-1 is left click of mouse
     BG = 'white'  # back ground colour
     FONT = ('Ubuntu', 15)  # font properties
+    FIRST_FILE_NAME = "first image.jpg"
+    SECOND_FILE_NAME = "second image.jpg"
 
     def __init__(self, master):
         self.master = master
         master.title("Compare details")  # title window
         master.configure(bg="white")  # back ground color of window
-        self.containers = [ContBtnLbl(master, 0, 0, "First file"), ContBtnLbl(master, 1, 0, "Second file")]
+        self.containers = [Cbl.ContBtnLbl(master, 0, 0, "First file"), Cbl.ContBtnLbl(master, 1, 0, "Second file")]
         self.button = Button(master, text='Compare', width=10, font=self.FONT, bg=self.BG)
         self.button.grid(row=2, column=0, sticky="w")
         self.button.bind(self.BIND_KEY, self.calculate)  # bind button by func
         self.circuits = []
         self.param_circuit = []
-        self.nums_px = 0
-        self.nums_mm = 0
-        self.d_circuit = 0
+
     def calculate(self, event):
         if all([c.state for c in self.containers]):
             path_to_first_circuit, path_to_second_circuit = [c.path for c in self.containers]
@@ -35,20 +36,11 @@ class Window:
 
     def draw(self):
         a, b = [c.fill_circuit for c in self.param_circuit]
-        first_file_name = "first image.jpg"
-        second_file_name = "second image.jpg"
-        D2c.Draw2Circuits(a, b, first_file_name)
+        D2c.Draw2Circuits(a, b, self.FIRST_FILE_NAME)
         a, b = [c.histogram for c in self.param_circuit]
-        D2c.Draw2Circuits(a, b, second_file_name)
-        self.calc_param()
+        D2c.Draw2Circuits(a, b, self.SECOND_FILE_NAME)
         self.clear_win()
-        self.result_win(first_file_name, second_file_name)
-
-    def calc_param(self):
-        a, b = [c.lens_of_circuit for c in self.param_circuit]
-        self.nums_px = Ad.AverDev(a, b)
-        c, d = [c.width_of_image for c in self.param_circuit]
-        self.nums_mm = Ad.AverDev(a, b, max(c, d), 24.4)
+        self.result_win()
 
     def clear_win(self):
         self.button.destroy()
@@ -56,46 +48,20 @@ class Window:
             c.button.destroy()
             c.label.destroy()
 
-    def result_win(self, first_file, second_file):
-        pass
-
-
-class ContBtnLbl:
-    TEXT_LABEL = "-file doesn't choose-"
-
-    def __init__(self, master, row, column, text_button):
-        self.state = False  # state of func
-        self.button = Button(master, text=text_button, width=10, font=Window.FONT, bg=Window.BG)
-        self.button.grid(row=row, column=column, sticky="w")
-        self.button.bind(Window.BIND_KEY, self.open_file_event)  # bind button by func
-        self.label = Label(master, width=20, text=self.TEXT_LABEL, font=Window.FONT, bg=Window.BG, fg='black')
-        self.label.grid(row=row, column=column+1)
-        self.path = ""
-
-    def open_file_event(self, event):
-        """Open window for get path on the file, filter .jpg and .JPG files, filter all errors"""
-        self.path = askopenfilename()
-        try:
-            if not self.path:
-                self.label['text'] = self.TEXT_LABEL
-                self.label['fg'] = 'red'
-                self.state = False
-            else:
-                if self.path.split('.')[-1].lower() in ['jpg', 'jpeg']:
-                    self.label['text'] = os.path.split(self.path)[-1]
-                    self.label['fg'] = 'green'
-                    # it'll return name of file into label
-                    self.state = True
-                else:
-                    self.label['text'] = "-ErrTypeOfFile-"
-                    self.label['fg'] = 'red'
-                    # if choose file which has different enhancing type, it'll return error into label
-                    self.state = False
-        except TypeError or FileNotFoundError:
-            self.label['text'] = self.TEXT_LABEL
-            self.label['fg'] = 'red'
-            self.state = False
-            # if return some errors, it'll be painted label in red colour
+    def result_win(self):
+        a, b = [c.lens_of_circuit for c in self.param_circuit]
+        nums_px = Ad.AverDev(a, b)
+        first_height, second_height = [c.width_of_image for c in self.param_circuit]
+        first_width, second_width = [c.height_of_image for c in self.param_circuit]
+        nums_mm = Ad.AverDev(a, b, max(first_height, second_height), 24.4)
+        Oi.OutputImage(self.master, 0, 0, max(first_width, second_width), max(first_height, second_height), self.FIRST_FILE_NAME)
+        Oi.OutputImage(self.master, 0, 1, max(first_width, second_width), max(first_height, second_height), self.SECOND_FILE_NAME)
+        CLabel.OutputLabel(self.master, 1, 0, 'Ср. отклонение(px):', nums_px.deviation())
+        CLabel.OutputLabel(self.master, 2, 0, 'Ср.кв.отклонение(px):', nums_px.average_dev())
+        CLabel.OutputLabel(self.master, 3, 0, 'Макс. отклонение(px):', nums_px.max_deviation())
+        CLabel.OutputLabel(self.master, 1, 2, 'Ср. отклонение(mm):', nums_mm.deviation())
+        CLabel.OutputLabel(self.master, 2, 2, 'Ср.кв.отклонение(mm):', nums_mm.average_dev())
+        CLabel.OutputLabel(self.master, 3, 2, 'Макс. отклонение(px):', nums_mm.max_deviation())
 
 
 root = Tk()

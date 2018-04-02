@@ -6,24 +6,27 @@ from tkinter.filedialog import *
 class Window:
     BIND_KEY = "<Button-1>"  # Button-1 is left click of mouse
     TEXT_LABEL = "-file doesn't choose-"
-    BG = 'white'  # back ground colour
+    BG = "white"  # back ground colour
     FONT = ('Ubuntu', 15)  # font properties
     PAGE_NAME = "Лист1"
+    FG = "black"
+    WIDTH_EL = 20
+    RESOLUTION = "520x224"
 
     def __init__(self, master):
         master.title("Compare details")  # title window
-        master.configure(bg="white")  # back ground color of window
-        master.geometry("580x224")
+        master.configure(bg=self.BG)  # back ground color of window
+        master.geometry(self.RESOLUTION)
         self.containers_btn = [ContBtnAndLbl(master, 0, 0, "First file"),
                                ContBtnAndLbl(master, 1, 0, "Second file")]
         self.containers_check = [ContCheckBtn(master, 3, 0, "Cross"),
                                  ContCheckBtn(master, 4, 0, "Merge and remove re")]
         self.containers_empty = [ContEmptyLbl(master, 2, 0), ContEmptyLbl(master, 2, 1),
                                  ContEmptyLbl(master, 5, 0), ContEmptyLbl(master, 5, 1)]
-        button = Button(master, text='Calculate and save', width=20, font=self.FONT, bg=self.BG)
+        button = Button(master, text='Calculate and save', width=self.WIDTH_EL, font=self.FONT, bg=self.BG)
         button.grid(row=6, column=0, sticky="w")
         button.bind(self.BIND_KEY, self.check)  # bind button by func
-        self.label = Label(master, width=30, text="-status-", font=Window.FONT, bg=Window.BG, fg='black')
+        self.label = Label(master, width=self.WIDTH_EL+5, text="-status-", font=self.FONT, bg=self.BG, fg=self.FG)
         self.label.grid(row=6, column=1)
         self.lists = []
         self.res_merge_remove_re = []
@@ -54,7 +57,7 @@ class Window:
                 self.label['text'] = "Empty path of result file"
                 self.label['fg'] = "red"
             else:
-                self.name_of_result_file = self.path_to_result_file.split('.')[0].split('/')[-1] +str(".xlsx")
+                self.name_of_result_file = self.path_to_result_file.split('.')[0].split('/')[-1] + str(".xlsx")
                 n = self.path_to_result_file.split('.')[0].split('/')[-1]
                 self.path_to_result_file = self.path_to_result_file.split('.')[0][:-len(n)]
                 self.state_of_save = True
@@ -136,10 +139,11 @@ class ContBtnAndLbl:
 
     def __init__(self, master, row, column, text_button):
         self.state = False  # state of func
-        button = Button(master, text=text_button, width=20, font=Window.FONT, bg=Window.BG)
+        button = Button(master, text=text_button, width=Window.WIDTH_EL, font=Window.FONT, bg=Window.BG)
         button.grid(row=row, column=column, sticky="w")
         button.bind(Window.BIND_KEY, self.open_file_event)  # bind button by func
-        self.label = Label(master, width=20, text=Window.TEXT_LABEL, font=Window.FONT, bg=Window.BG, fg='black')
+        self.label = Label(master, width=Window.WIDTH_EL, text=Window.TEXT_LABEL,
+                           font=Window.FONT, bg=Window.BG, fg=Window.FG)
         self.label.grid(row=row, column=column+1)
         self.path = ""
 
@@ -172,14 +176,15 @@ class ContBtnAndLbl:
 class ContCheckBtn:
     def __init__(self, master, row, column, text_btn):
         self.check_var = BooleanVar()
-        check_button = Checkbutton(master, width=19, text=text_btn, font=Window.FONT,
+        check_button = Checkbutton(master, width=Window.WIDTH_EL-1, text=text_btn, font=Window.FONT,
                                    bg=Window.BG, variable=self.check_var)
         check_button.grid(row=row, column=column, sticky="n")
 
 
 class ContEmptyLbl:
     def __init__(self, master, row, column):
-        self.label = Label(master, width=20, text="---------------------", font=Window.FONT, bg=Window.BG, fg='black')
+        self.label = Label(master, width=Window.WIDTH_EL, text="---------------------",
+                           font=Window.FONT, bg=Window.BG, fg=Window.FG)
         self.label.grid(row=row, column=column)
 
 

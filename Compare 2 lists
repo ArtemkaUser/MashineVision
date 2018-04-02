@@ -57,9 +57,10 @@ class Window:
                 self.label['text'] = "Empty path of result file"
                 self.label['fg'] = "red"
             else:
-                self.name_of_result_file = self.path_to_result_file.split('.')[0].split('/')[-1] + str(".xlsx")
-                n = self.path_to_result_file.split('.')[0].split('/')[-1]
-                self.path_to_result_file = self.path_to_result_file.split('.')[0][:-len(n)]
+                path_to_result_file = self.path_to_result_file.split('.')[0]
+                name_of_result_file = path_to_result_file.split('/')[-1]
+                self.name_of_result_file = name_of_result_file + str(".xlsx")
+                self.path_to_result_file = path_to_result_file[:-len(name_of_result_file)]
                 self.state_of_save = True
 
         except TypeError or FileNotFoundError:

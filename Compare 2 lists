@@ -44,19 +44,16 @@ class Window:
                 self.calculate()
         elif all([c.state for c in self.containers_btn]) \
                 and not any([b.check_var.get() for b in self.containers_check]):
-            self.label['text'] = "Select type of calculation"
-            self.label['fg'] = "red"
+            self.error_message("Select type of calculation")
         else:
-            self.label['text'] = "Select files"
-            self.label['fg'] = "red"
+            self.error_message("Select files")
 
     def save_file(self):
         self.path_to_result_file = asksaveasfilename()
         try:
             if not self.path_to_result_file:
                 self.state_of_save = False
-                self.label['text'] = "Empty path of result file"
-                self.label['fg'] = "red"
+                self.error_message("Empty path of result file")
             else:
                 path_to_result_file = self.path_to_result_file.split('.')[0]
                 name_of_result_file = path_to_result_file.split('/')[-1]
@@ -66,8 +63,11 @@ class Window:
 
         except TypeError or FileNotFoundError:
             self.state_of_save = False
-            self.label['text'] = "File's not saved"
-            self.label['fg'] = "red"
+            self.error_message("File's not saved")
+
+    def error_message(self, text_message):
+        self.label['text'] = text_message
+        self.label['fg'] = "red"
 
     def calculate(self):
         excel.create_file(self.path_to_result_file, self.name_of_result_file)

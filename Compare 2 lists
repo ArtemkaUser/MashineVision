@@ -97,9 +97,6 @@ class Window:
 
 
 class HandlerExcel:
-    def __init__(self):
-        pass
-
     def read_file(self, path, page_name):
         """read cells from file and page_name,
         then return all cells like one list
@@ -143,13 +140,13 @@ class ContBtnAndLbl:
         self.state = False  # state of func
         button = Button(master, text=text_button, width=Window.WIDTH_EL, font=Window.FONT, bg=Window.BG)
         button.grid(row=row, column=column, sticky="w")
-        button.bind(Window.BIND_KEY, self.open_file_event)  # bind button by func
+        button.bind(Window.BIND_KEY, self.button_event)  # bind button by func
         self.label = Label(master, width=Window.WIDTH_EL, text=Window.TEXT_LABEL,
                            font=Window.FONT, bg=Window.BG, fg=Window.FG)
         self.label.grid(row=row, column=column+1)
         self.path = ""
 
-    def open_file_event(self, event):
+    def button_event(self, event):
         """Open window for get path on the file, filter .xls and .xlsx files, filter all errors"""
         self.path = askopenfilename()
         try:

@@ -1,0 +1,45 @@
+from picamera.array import PiRGBArray
+from picamera import PiCamera
+import time
+from skimage import data, color
+from skimage.transform import hough_circle, hough_circle_peaks
+from skimage.feature import canny
+from skimage.draw import circle_perimeter
+from skimage.util import img_as_ubyte
+import numpy as np
+import matplotlib.pyplot as plt
+# initialize the camera and grab a reference to the raw camera capture
+camera = PiCamera()
+camera.resolution = (1024, 768)
+camera.framerate = 30
+rawCapture = PiRGBArray(camera, size=(1024, 768))
+ 
+# allow the camera to warmup
+time.sleep(0.1)
+ 
+# capture frames from the camera
+for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+	# grab the raw NumPy array representing the image, then initialize the timestamp
+	# and occupied/unoccupied text
+	img = frame.array
+	edges = canny(img, sigma=3, low_threshold=10, high_threshold=50)
+	
+	hough_radii = np.arange(20, 35, 2)
+	hough_res = hough_circle(edges, hough_radii)
+
+	accums, cx, cy, radii = hough_circle_peaks(hough_res, hough_radii, total_num_peaks = 3)
+	fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(10, 4))
+	img = color.gray2rgb(img)
+	for center_y, center_x, radius in zip(cy, cx, radii):
+		circy, circx = circle_perimeter(center_y, center_x, radius)
+		img[circy, circx] = (220, 20, 20)
+		ax.imshow(img, cmap=plt.cm.gray)
+	plt.show()
+	key = cv2.waitKey(1) & 0xFF
+	# clear the stream in preparation for the next frame
+	rawCapture.truncate(0)
+ 
+	# if the `q` key was pressed, break from the loop
+	if key == ord("q"):
+		break
+cv2.destroyAllWindows()

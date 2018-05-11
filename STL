@@ -1,0 +1,47 @@
+from stl import mesh
+import numpy as np
+import cv2
+
+# считываем STL модель
+obj = mesh.Mesh.from_file('1.stl')
+
+# разворачиваем все координаты X в один массив numpy
+x = np.array([i for i in obj.x])
+x = x.ravel()
+
+# разворачиваем все координаты Y в один массив numpy
+y = np.array([i for i in obj.y])
+y = y.ravel()
+
+# разворачиваем все координаты Z в один массив numpy
+z = np.array([i for i in obj.z])
+z = z.ravel()
+
+# рассчет смещения для изображения
+shift_x = abs(int(min(x)))
+shift_y = abs(int(min(y)))
+shift_z = abs(int(min(z)))
+
+# смещение изображения из отрицательных координат к натуральным числам
+x = [int(i+shift_x) for i in x]
+y = [int(i+shift_y) for i in y]
+z = [int(i+shift_z) for i in z]
+
+# форматируем контур для openCV
+cnt = np.array([list(i) for i in zip(x, y)])
+cnt.shape = (int(len(cnt)/3), 3, 2)
+
+# рассчет ширины и высоты изображения
+img_width = abs(int(max(x)))+abs(int(min(x)))+1
+img_height = abs(int(max(y)))+abs(int(min(y)))+1
+
+# создание пустого изображения
+img = np.zeros((img_height, img_width, 3), np.uint8)
+cv2.drawContours(img, cnt, -1, (255, 255, 255), 1)
+
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+cnts = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[1]
+
+cv2.drawContours(img, cnts, -1, (0, 0, 255), 1)
+
+cv2.imwrite("img.jpg", img)

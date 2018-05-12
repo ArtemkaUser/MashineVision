@@ -2,19 +2,24 @@ from stl import mesh
 import numpy as np
 import cv2
 
+# точность расчета, где 1 = 1 мм, 10 = 0.1 мм
+calculation_accuracy = 10
+
+shift_img = 50
 # считываем STL модель
-obj = mesh.Mesh.from_file('1.stl')
+obj = mesh.Mesh.from_file('det_1.stl')
 
 # разворачиваем все координаты X в один массив numpy
-x = np.array([i for i in obj.x])
+x = np.array([i*calculation_accuracy for i in obj.x])
+
 x = x.ravel()
 
 # разворачиваем все координаты Y в один массив numpy
-y = np.array([i for i in obj.y])
+y = np.array([i*calculation_accuracy for i in obj.y])
 y = y.ravel()
 
 # разворачиваем все координаты Z в один массив numpy
-z = np.array([i for i in obj.z])
+z = np.array([i*calculation_accuracy for i in obj.z])
 z = z.ravel()
 
 # рассчет смещения для изображения
@@ -23,14 +28,13 @@ shift_y = abs(int(min(y)))
 shift_z = abs(int(min(z)))
 
 # смещение изображения из отрицательных координат к натуральным числам
-x = [int(i+shift_x) for i in x]
-y = [int(i+shift_y) for i in y]
-z = [int(i+shift_z) for i in z]
+x = [int(i+shift_x+shift_img) for i in x]
+y = [int(i+shift_y+shift_img) for i in y]
+z = [int(i+shift_z+shift_img) for i in z]
 
 # форматируем контур для openCV
 cnt_xy = np.array([list(i) for i in zip(x, y)])
 cnt_xy.shape = (int(len(cnt_xy)/3), 3, 2)
-print(cnt_xy)
 
 cnt_yz = np.array([list(i) for i in zip(y, z)])
 cnt_yz.shape = (int(len(cnt_yz)/3), 3, 2)
@@ -39,33 +43,39 @@ cnt_zx = np.array([list(i) for i in zip(z, x)])
 cnt_zx.shape = (int(len(cnt_zx)/3), 3, 2)
 
 # рассчет ширины и высоты изображения
-img_len_x = abs(int(max(x)))+abs(int(min(x)))+1
-img_len_y = abs(int(max(y)))+abs(int(min(y)))+1
-img_len_z = abs(int(max(z)))+abs(int(min(z)))+1
+img_len_x = abs(int(max(x)))+abs(int(min(x)))+shift_img*2
+img_len_y = abs(int(max(y)))+abs(int(min(y)))+shift_img*2
+img_len_z = abs(int(max(z)))+abs(int(min(z)))+shift_img*2
 
 # создание пустого изображения
 img_xy = np.zeros((img_len_y, img_len_x, 3), np.uint8)
-cv2.drawContours(img_xy, cnt_xy, -1, (255, 255, 255), 1)
-
+#cv2.drawContours(img_xy, cnt_xy, -1, (255, 255, 255), 0)
+cv2.fillPoly(img_xy, cnt_xy, (0, 0, 255))
 img_yz = np.zeros((img_len_z, img_len_y, 3), np.uint8)
-cv2.drawContours(img_yz, cnt_yz, -1, (255, 255, 255), 1)
+cv2.drawContours(img_yz, cnt_yz, -1, (255, 255, 255), -1)
 
 img_zx = np.zeros((img_len_x, img_len_z, 3), np.uint8)
-cv2.drawContours(img_zx, cnt_zx, -1, (255, 255, 255), 1)
+cv2.drawContours(img_zx, cnt_zx, -1, (255, 255, 255), -1)
 
 # оттенки серого и поиск контура
 gray_xy = cv2.cvtColor(img_xy, cv2.COLOR_BGR2GRAY)
-cnts_xy = cv2.findContours(gray_xy, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[1]
+#gray_blur = cv2.GaussianBlur(gray_xy, (3, 3), 1)
+#kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (10, 10))
+#closed = cv2.morphologyEx(gray_blur, cv2.MORPH_CLOSE, kernel)
+
+#_, cnts_xy, hierarchy_xy = cv2.findContours(closed, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+#_, cnts_xy, hierarchy_xy = cv2.findContours(gray_xy, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
 gray_yz = cv2.cvtColor(img_yz, cv2.COLOR_BGR2GRAY)
-cnts_yz = cv2.findContours(gray_yz, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[1]
+_, cnts_yz, hierarchy_yz = cv2.findContours(gray_yz, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
 gray_zx = cv2.cvtColor(img_zx, cv2.COLOR_BGR2GRAY)
-cnts_zx = cv2.findContours(gray_zx, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[1]
+_, cnts_zx, hierarchy_zx = cv2.findContours(gray_zx, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
-cv2.drawContours(img_xy, cnts_xy, -1, (0, 0, 255), 1)
-cv2.drawContours(img_yz, cnts_yz, -1, (0, 0, 255), 1)
-cv2.drawContours(img_zx, cnts_zx, -1, (0, 0, 255), 1)
+#cv2.drawContours(img_xy, cnts_xy, -1, (0, 0, 255), 1, cv2.LINE_AA, hierarchy_xy, 2)
+#cv2.fillPoly(img_xy, cnt_xy, (0, 0, 255))
+cv2.drawContours(img_yz, cnts_yz, -1, (0, 0, 255), 1, cv2.LINE_AA, hierarchy_yz, 2)
+cv2.drawContours(img_zx, cnts_zx, -1, (0, 0, 255), 1, cv2.LINE_AA, hierarchy_zx, 2)
 
 cv2.imwrite("img_xy.jpg", img_xy)
 cv2.imwrite("img_yz.jpg", img_yz)
